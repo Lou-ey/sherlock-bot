@@ -35,4 +35,16 @@ async def on_ready():
                 print(f'Failed to load {filename[:-3]}')
                 print(e)
 
+# slash command help
+@client.tree.command(name="help", description="Shows help information about the bot")
+async def help(ctx):
+    help_text = """
+    **Available Commands:**
+    `?fact_now` - Tells the current fact immediately.
+    `?prev_fact` - Tells the previous fact.
+    `?fact_day <day_number>` - Tells the fact for the specified day.
+    More commands will be added soon!
+    """
+    await ctx.send(help_text)
+
 client.run(TOKEN)

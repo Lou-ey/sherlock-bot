@@ -1,3 +1,44 @@
 [
-
+  {
+    "day": 1,
+    "fact": "O som mais alto já registrado na Terra foi a erupção do vulcão Krakatoa em 1883, que foi ouvido a mais de 4.800 km de distância.",
+    "use_date": "14/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 2,
+    "fact": "As abelhas podem reconhecer rostos humanos.",
+    "use_date": "15/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 3,
+    "fact": "Por cada ser humano, na Terra, existem 2,5 milhões de formigas.",
+    "use_date": "16/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 4,
+    "fact": "A coruja-das-torres tem a capacidade de voar durante meses sem aterrar.",
+    "use_date": "17/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 5,
+    "fact": "O corpo humano tem mais de 600 músculos.",
+    "use_date": "18/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 6,
+    "fact": "Os polvos têm três corações.",
+    "use_date": "19/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 7,
+    "fact": "Os mosquitos são os animais mais letais do mundo, causando mais mortes humanas do que todas as guerras da história. Esses seres vivos matam cerca de 725 mil humanos anualmente.",
+    "use_date": "20/10/2025",
+    "use_time": "22:00 UTC"
+  }
 ]
