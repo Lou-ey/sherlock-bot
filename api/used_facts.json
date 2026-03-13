@@ -39,6 +39,132 @@
     "day": 7,
     "fact": "Os mosquitos são os animais mais letais do mundo, causando mais mortes humanas do que todas as guerras da história. Esses seres vivos matam cerca de 725 mil humanos anualmente.",
     "use_date": "20/10/2025",
-    "use_time": "22:00 UTC"
+    "use_time": "22:00"
+  },
+  {
+    "day": 8,
+    "fact": "O maior peixe do mundo é o tubarão-baleia, que pode crescer até 12 metros de comprimento.",
+    "use_date": "21/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 9,
+    "fact": "Em média, um adulto respira 550 litros de oxigênio puro diariamente.",
+    "use_date": "22/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 10,
+    "fact": "Os golfinhos dormem com um olho aberto",
+    "use_date": "23/10/2025",
+    "use_time": "23:27"
+  },
+  {
+    "day": 11,
+    "fact": "O Monte Everest cresce cerca de 4 milímetros a cada ano.",
+    "use_date": "24/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 12,
+    "fact": "Michael Jackson quis comprar a Marvel para, um dia, interpretar o Homem-Aranha no cinema.",
+    "use_date": "25/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 13,
+    "fact": "As formigas não dormem.",
+    "use_date": "26/10/2025",
+    "use_time": "21:00"
+  },
+  {
+    "day": 14,
+    "fact": "O cérebro de Albert Einstein, o maior físico de todos os tempos, não pereceu. Ele se mantém conservado até hoje numa solução de etanol e álcool etílico.",
+    "use_date": "26/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 15,
+    "fact": "A girafa macho dá continuamente cabeçadas na bexiga da fêmea até ela fazer xixi. O macho prova-o, o que o leva a determinar se a fêmea está em período fértil.",
+    "use_date": "27/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 16,
+    "fact": "As baratas podem viver várias semanas sem a cabeça, pois seu cérebro está distribuído por todo o corpo.",
+    "use_date": "28/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 17,
+    "fact": "A Terra é o único planeta do sistema solar que não leva o nome de um deus romano ou grego.",
+    "use_date": "29/10/2025",
+    "use_time": "22:22"
+  },
+  {
+    "day": 18,
+    "fact": "Cerca de 4% da população mundial é canhota.",
+    "use_date": "30/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 19,
+    "fact": "O coração humano cria pressão suficiente para jorrar sangue a uma distância de até 9 metros.",
+    "use_date": "31/10/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 20,
+    "fact": "O maior órgão do corpo humano é a pele.",
+    "use_date": "01/11/2025",
+    "use_time": "23:37"
+  },
+  {
+    "day": 21,
+    "fact": "A Lua afasta-se da Terra a uma taxa de cerca de 3,8 centímetros por ano.",
+    "use_date": "02/11/2025",
+    "use_time": "22:31"
+  },
+  {
+    "day": 22,
+    "fact": "Em 1977, a Voyager 1 levou um “disco dourado” com sons e músicas da Terra, como uma mensagem para extraterrestres.",
+    "use_date": "04/11/2025",
+    "use_time": "23:05"
+  },
+  {
+    "day": 23,
+    "fact": "O maior deserto do mundo não é o Saara, mas a Antártida.",
+    "use_date": "06/11/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 24,
+    "fact": "As lulas gigantes têm olhos do tamanho de pratos de jantar, os maiores do reino animal.",
+    "use_date": "07/11/2025",
+    "use_time": "22:28"
+  },
+  {
+    "day": 25,
+    "fact": "O músculo mais forte do corpo humano é a língua.",
+    "use_date": "13/11/2025",
+    "use_time": "23:03"
+  },
+  {
+    "day": 26,
+    "fact": "Cleópatra viveu mais perto temporalmente do primeiro iPhone do que da construção das pirâmides.",
+    "use_date": "15/11/2025",
+    "use_time": "22:00"
+  },
+  {
+    "day": 27,
+    "fact": "As árvores “falam” entre si através de redes subterrâneas de fungos — uma “internet” vegetal chamada Wood Wide Web.",
+    "use_date": "16/11/2025",
+    "use_time": "22:47"
+  },
+  {
+    "day": 28,
+    "fact": "A primeira fotografia de sempre levou 8 horas de exposição à luz.",
+    "use_date": "17/11/2025",
+    "use_time": "22:00"
   }
 ]

@@ -1,4 +1,5 @@
 import discord
+from discord.app_commands import describe
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
@@ -10,7 +11,7 @@ intents = discord.Intents.all()
 intents.members = True
 intents.message_content = True
 
-client = commands.Bot(command_prefix='?', intents=intents)
+client = commands.Bot(command_prefix='?', intents=intents, help_command=None)
 
 green = 0x00FF00
 red = 0xFF0000
@@ -35,16 +36,20 @@ async def on_ready():
                 print(f'Failed to load {filename[:-3]}')
                 print(e)
 
-# slash command help
-@client.tree.command(name="help", description="Shows help information about the bot")
+@client.command()
 async def help(ctx):
-    help_text = """
-    **Available Commands:**
-    `?fact_now` - Tells the current fact immediately.
-    `?prev_fact` - Tells the previous fact.
-    `?fact_day <day_number>` - Tells the fact for the specified day.
-    More commands will be added soon!
-    """
-    await ctx.send(help_text)
+    embed = discord.Embed(
+        title="Sherlock Help",
+        description="Available Commands",
+        color=green
+    )
+    embed.add_field(name="?fact_now", value="Tells the current fact immediately.", inline=False)
+    embed.add_field(name="?prev_fact", value="Tells the previous fact.", inline=False)
+    embed.add_field(name="?fact_day <day_or_date>", value="Retrieves the fact for a specific day or date.", inline=False)
+    embed.add_field(name="?insult opt[member] opt[custom_insult]", value="Sends an insult to a member or a random member in your voice channel.(opt = optional)", inline=False)
+    embed.add_field(name="?add_insult <insult_text>", value="Adds a new insult to the insult list.", inline=False)
+    embed.add_field(name="?help", value="Shows this help message.", inline=False)
+    embed.set_footer(text="More commands will be added soon!")
+    await ctx.send(embed=embed)
 
 client.run(TOKEN)

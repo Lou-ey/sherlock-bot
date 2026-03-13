@@ -5,6 +5,7 @@ from gtts import gTTS
 import discord
 from discord.ext import commands, tasks
 import aiohttp
+import random
 
 class Facts(commands.Cog):
     def __init__(self, bot, voice_channel_id: int, exec_hour: str):
