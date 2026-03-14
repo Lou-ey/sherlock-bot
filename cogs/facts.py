@@ -34,7 +34,7 @@ class Facts(commands.Cog):
 
     async def get_fact(self):
         async with aiohttp.ClientSession() as session:
-            async with session.get("http://localhost:5000/fact") as resp:
+            async with session.get("http://localhost:6000/fact") as resp:
                 if resp.status != 200:
                     print("❌ Error fetching fact.")
                     return None
@@ -121,7 +121,7 @@ class Facts(commands.Cog):
         previous_day = day
 
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"http://localhost:5000/fact/{previous_day}") as resp:
+            async with session.get(f"http://localhost:6000/fact/{previous_day}") as resp:
                 if resp.status == 404:
                     await ctx.send(f"❌ No fact found for day {previous_day}.")
                     return
@@ -138,7 +138,7 @@ class Facts(commands.Cog):
 
     @commands.command()
     async def fact_day(self, ctx, arg):
-        api_url = "http://localhost:5000"
+        api_url = "http://localhost:6000"
 
         if "/" in arg:
             arg = arg.replace("/", "-")

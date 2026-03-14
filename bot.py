@@ -7,9 +7,10 @@ import os
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
-intents = discord.Intents.all()
+intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+intents.voice_states = True
 
 client = commands.Bot(command_prefix='?', intents=intents, help_command=None)
 
@@ -18,7 +19,7 @@ red = 0xFF0000
 
 @client.event
 async def on_ready():
-    activity = discord.Activity(type=discord.ActivityType.listening, name='!facts')
+    activity = discord.Activity(type=discord.ActivityType.listening, name='?facts')
     await client.change_presence(activity=activity)
     print(f'{client.user} has connected to the following servers:\n')
     for server in client.guilds:
