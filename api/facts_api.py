@@ -1,105 +1,141 @@
 from datetime import datetime
 from flask import Flask, jsonify, request
+import sqlite3
 import random
-import json
 import os
 
 app = Flask(__name__)
-FACTS_FILE = "facts.json"
-USED_FILE = "used_facts.json"
 
-# --- Ler factos ---
-def load_facts():
-    if os.path.exists(FACTS_FILE):
-        with open(FACTS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+# Caminho absoluto para evitar problemas com o Systemd
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_FILE = os.path.join(BASE_DIR, "facts.db")
 
-def load_used_facts():
-    if os.path.exists(USED_FILE):
-        with open(USED_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
 
-def save_used_facts(used):
-    with open(USED_FILE, "w", encoding="utf-8") as f:
-        json.dump(used, f, ensure_ascii=False, indent=2)
+def get_db_connection():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    conn = get_db_connection()
+    c = conn.cursor()
+    # Tabela com os factos originais
+    c.execute('''CREATE TABLE IF NOT EXISTS facts
+                 (
+                     id
+                     INTEGER
+                     PRIMARY
+                     KEY
+                     AUTOINCREMENT,
+                     fact_text
+                     TEXT
+                     UNIQUE
+                 )''')
+    # Tabela com o histórico dos usados
+    c.execute('''CREATE TABLE IF NOT EXISTS used_facts
+                 (
+                     day
+                     INTEGER
+                     PRIMARY
+                     KEY
+                     AUTOINCREMENT,
+                     fact_id
+                     INTEGER,
+                     fact_text
+                     TEXT,
+                     use_date
+                     TEXT,
+                     use_time
+                     TEXT
+                 )''')
+    conn.commit()
+    conn.close()
+
+
+# Inicia o DB ao carregar a aplicação
+init_db()
+
 
 @app.route("/fact", methods=["GET"])
 def get_random_fact():
-    facts = load_facts()
-    used = load_used_facts()
+    conn = get_db_connection()
+    c = conn.cursor()
 
-    used_texts = [u["fact"] for u in used]
-
-    available = [f for f in facts if f not in used_texts]
+    # Vai buscar todos os factos que AINDA NÃO estão na tabela "used_facts"
+    c.execute('''SELECT id, fact_text
+                 FROM facts
+                 WHERE id NOT IN (SELECT fact_id FROM used_facts)''')
+    available = c.fetchall()
 
     if not available:
-        # Todos os factos foram usados — reiniciar
-        used = []
-        available = facts
+        # Lógica de reset: Apaga os usados se todos foram lidos
+        c.execute('DELETE FROM used_facts')
+        conn.commit()
+        c.execute('SELECT id, fact_text FROM facts')
+        available = c.fetchall()
         print("♻️ Todos os factos foram usados — a lista foi reiniciada.")
 
-    fact = random.choice(available)
+    if not available:
+        conn.close()
+        return jsonify({"error": "Não há factos na base de dados."}), 404
 
-    day_number = len(used) + 1
+    # Escolhe um aleatório
+    chosen = random.choice(available)
+    fact_id = chosen['id']
+    fact_text = chosen['fact_text']
 
-    # Registar o a data do facto usado
-    use_date = datetime.now().strftime("%d/%m/%Y")
-    use_time = datetime.now().strftime("%H:%M")
+    # Guarda a data atual
+    now = datetime.now()
+    use_date = now.strftime("%d/%m/%Y")
+    use_time = now.strftime("%H:%M")
 
-    used.append({"day": day_number, "fact": fact, "use_date": use_date, "use_time": use_time})
-    save_used_facts(used)
+    # Regista o uso (o SQLite incrementa o 'day' sozinho!)
+    c.execute('''INSERT INTO used_facts (fact_id, fact_text, use_date, use_time)
+                 VALUES (?, ?, ?, ?)''', (fact_id, fact_text, use_date, use_time))
+    day = c.lastrowid
+    conn.commit()
+    conn.close()
 
-    return jsonify({"day": day_number, "fact": fact, "use_date": use_date, "use_time": use_time})
+    return jsonify({"day": day, "fact": fact_text, "use_date": use_date, "use_time": use_time})
+
 
 @app.route("/fact/<day_or_date>", methods=["GET"])
-def get_fact_by_day_or_date(day_or_date=None):
-    used = load_used_facts()
+def get_fact_by_day_or_date(day_or_date):
+    conn = get_db_connection()
+    c = conn.cursor()
 
-    date_param = request.args.get("date")
-    if date_param:
-        for entry in used:
-            if entry["use_date"] == date_param:
-                return jsonify(entry)
-        return jsonify({"error": "Fact not found for that day."}), 404
+    if day_or_date.isdigit():
+        c.execute('SELECT * FROM used_facts WHERE day = ?', (int(day_or_date),))
+    else:
+        # Se for data no formato DD-MM-YYYY
+        date_search = day_or_date.replace("-", "/")
+        c.execute('SELECT * FROM used_facts WHERE use_date = ? LIMIT 1', (date_search,))
 
-    if day_or_date:
-        if day_or_date.isdigit():
-            day = int(day_or_date)
-            for entry in used:
-                if entry.get("day") == day:
-                    return jsonify(entry)
-            return jsonify({"error": "Fact not found for that day."}), 404
-        else:
-            # tenta interpretar como data
-            try:
-                datetime.strptime(day_or_date, "%d-%m-%Y")
-                date_search = day_or_date.replace("-", "/")
-            except ValueError:
-                return jsonify({"error": "Invalid date format. Use DD-MM-YYYY."}), 400
+    row = c.fetchone()
+    conn.close()
 
-            for entry in used:
-                if entry.get("use_date") == date_search:
-                    return jsonify(entry)
+    if row:
+        return jsonify(dict(row))
+    return jsonify({"error": "Facto não encontrado."}), 404
 
-            return jsonify({"error": f"Fact not found for date {date_search}."}), 404
-
-    return jsonify({"error": "Day or date not provided."}), 400
 
 @app.route("/fact", methods=["POST"])
 def add_fact():
     data = request.get_json()
     if not data or "fact" not in data:
-        return jsonify({"error": "Missing 'fact' field"}), 400
+        return jsonify({"error": "Falta o campo 'fact'"}), 400
 
-    facts = load_facts()
-    facts.append(data["fact"])
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+        c.execute('INSERT INTO facts (fact_text) VALUES (?)', (data['fact'],))
+        conn.commit()
+        conn.close()
+        return jsonify({"message": "Facto adicionado com sucesso!"}), 201
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "Esse facto já existe."}), 409
 
-    with open(FACTS_FILE, "w", encoding="utf-8") as f:
-        json.dump(facts, f, ensure_ascii=False, indent=2)
-
-    return jsonify({"message": "Fact added successfully!"}), 201
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    app.run(host="0.0.0.0", port=6000)
