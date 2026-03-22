@@ -20,7 +20,6 @@ def get_db_connection():
 def init_db():
     conn = get_db_connection()
     c = conn.cursor()
-    # Tabela com os factos originais
     c.execute('''CREATE TABLE IF NOT EXISTS facts
                  (
                      id
@@ -32,7 +31,6 @@ def init_db():
                      TEXT
                      UNIQUE
                  )''')
-    # Tabela com o histórico dos usados
     c.execute('''CREATE TABLE IF NOT EXISTS used_facts
                  (
                      day
@@ -52,24 +50,19 @@ def init_db():
     conn.commit()
     conn.close()
 
-
-# Inicia o DB ao carregar a aplicação
 init_db()
-
 
 @app.route("/fact", methods=["GET"])
 def get_random_fact():
     conn = get_db_connection()
     c = conn.cursor()
 
-    # Vai buscar todos os factos que AINDA NÃO estão na tabela "used_facts"
     c.execute('''SELECT id, fact_text
                  FROM facts
                  WHERE id NOT IN (SELECT fact_id FROM used_facts)''')
     available = c.fetchall()
 
     if not available:
-        # Lógica de reset: Apaga os usados se todos foram lidos
         c.execute('DELETE FROM used_facts')
         conn.commit()
         c.execute('SELECT id, fact_text FROM facts')
@@ -80,17 +73,14 @@ def get_random_fact():
         conn.close()
         return jsonify({"error": "Não há factos na base de dados."}), 404
 
-    # Escolhe um aleatório
     chosen = random.choice(available)
     fact_id = chosen['id']
     fact_text = chosen['fact_text']
 
-    # Guarda a data atual
     now = datetime.now()
     use_date = now.strftime("%d/%m/%Y")
     use_time = now.strftime("%H:%M")
 
-    # Regista o uso (o SQLite incrementa o 'day' sozinho!)
     c.execute('''INSERT INTO used_facts (fact_id, fact_text, use_date, use_time)
                  VALUES (?, ?, ?, ?)''', (fact_id, fact_text, use_date, use_time))
     day = c.lastrowid

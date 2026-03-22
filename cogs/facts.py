@@ -3,67 +3,89 @@ import datetime
 import os
 from gtts import gTTS
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import aiohttp
-
+import zoneinfo
 
 class Facts(commands.Cog):
     def __init__(self, bot, voice_channel_id: int, exec_hour: str):
         self.bot = bot
         self.voice_channel_id = voice_channel_id
         self.exec_hour = exec_hour
-        self.bot.loop.create_task(self.fact_loop())
+        self.tz = zoneinfo.ZoneInfo("Europe/Lisbon")
+        self.session = aiohttp.ClientSession()
 
-    async def get_fact(self):
-        async with aiohttp.ClientSession() as session:
-            async with session.get("http://localhost:6000/fact") as resp:
-                if resp.status != 200:
-                    print("❌ Erro ao buscar facto.")
-                    return None
-                # Devolvemos tudo o que a API manda (fact, day, use_date, use_time)
-                return await resp.json()
+        h, m = map(int, exec_hour.split(":"))
+        self.target_time = datetime.time(hour=h, minute=m, tzinfo=self.tz)
 
-    def get_next_exec_time(self):
-        now = datetime.datetime.now()
-        target_time = datetime.datetime.strptime(self.exec_hour, "%H:%M").replace(
-            year=now.year, month=now.month, day=now.day, tzinfo=None
-        )
-        if target_time < now:
-            target_time += datetime.timedelta(days=1)
-        return target_time
+        self.daily_fact_loop.start()
 
-    async def wait_till_exec_time(self):
-        next_time = self.get_next_exec_time()
-        delta = (next_time - datetime.datetime.now()).total_seconds()
-        hours, remainder = divmod(int(delta), 3600)
-        minutes, seconds = divmod(remainder, 60)
-        print(f"⏳ Próximo facto em {hours}h {minutes}m {seconds}s ({next_time.strftime('%H:%M')})")
-        await asyncio.sleep(delta)
+    def cog_unload(self):
+        self.daily_fact_loop.cancel()
+        asyncio.create_task(self.session.close())
 
-    # Substituímos o tasks.loop por uma task assíncrona simples
-    async def fact_loop(self):
+    @tasks.loop(time=[datetime.time(hour=22, minute=0, tzinfo=zoneinfo.ZoneInfo("Europe/Lisbon"))])
+    async def daily_fact_loop(self):
+        print(f"⏰ Hour reached: {self.exec_hour}. Executing...")
+        await self.tell_fact()
+
+    @daily_fact_loop.before_loop
+    async def before_daily_fact(self):
         await self.bot.wait_until_ready()
-        while not self.bot.is_closed():
-            await self.wait_till_exec_time()
-            await self.tell_fact()
+        print("✅ Fact loop is active and waiting for the scheduled time...")
+
+        time_until_target = self.target_time.hour * 3600 + self.target_time.minute * 60 - (datetime.datetime.now(self.tz).hour * 3600 + datetime.datetime.now(self.tz).minute * 60)
+        if time_until_target < 0:
+            time_until_target += 24 * 3600  # add 24 hours in seconds
+        print(f"⏳ Time until first execution: {time_until_target // 3600}h {(time_until_target % 3600) // 60}m")
+
+        now = datetime.datetime.now(self.tz)
+        if now.hour >= 22:
+            today_str = now.strftime("%d-%m-%Y")
+            async with self.session.get(f"http://localhost:6000/fact/{today_str}") as resp:
+                if resp.status == 404:
+                    print("⚠️ The bot started after the scheduled time and today's fact has not been counted. Catching up now...")
+                    await self.tell_fact()
+                else:
+                    print("ℹ️ Today's fact has already been counted. No need to catch up.")
+
+    async def get_fact(self, day_or_date=None):
+        url = "http://localhost:6000/fact"
+        if day_or_date:
+            url = f'{url}/{day_or_date}'
+
+        try:
+            async with self.session.get(url) as resp:
+                if resp.status == 200:
+                    return await resp.json()
+        except Exception as e:
+            print("❌ Error fetching fact from API.")
+        return None
 
     async def speak_text(self, channel, text):
-        tts = gTTS(text, lang='pt')
+        tts = gTTS(text, lang='pt', tld='pt')
         tts.save("temp.mp3")
+        vc = channel.guild.voice_client
         try:
+            #if vc is None:
             vc = await channel.connect()
+            if vc.channel.id != channel.id:
+                await vc.move_to(channel)
             vc.play(discord.FFmpegPCMAudio("temp.mp3"), after=lambda e: print(f'Reprodução concluída: {e}'))
             while vc.is_playing():
                 await asyncio.sleep(1)
             await vc.disconnect()
         except Exception as e:
             print(f"❌ Erro no TTS: {e}")
+            if vc and vc.is_connected():
+                await vc.disconnect()
         finally:
             if os.path.exists("temp.mp3"):
                 os.remove("temp.mp3")
 
     async def tell_fact(self):
         channel = self.bot.get_channel(self.voice_channel_id)
+
         if not channel or not isinstance(channel, discord.VoiceChannel):
             print("❌ Canal de voz não encontrado.")
             return
@@ -73,7 +95,7 @@ class Facts(commands.Cog):
             return
 
         # A API envia o dia exato
-        fact_text = data.get("fact")
+        fact_text = data.get("fact_text") or data.get("fact")
         day = data.get("day")
 
         frase = f'Facto interessante, dia {day}. {fact_text}'
@@ -123,5 +145,5 @@ class Facts(commands.Cog):
 
 async def setup(bot):
     voice_channel_id = os.getenv("VOICE_CHANNEL_ID")
-    exec_hour = os.getenv("EXEC_HOUR")
+    exec_hour = os.getenv("EXEC_HOUR") or "22:00"
     await bot.add_cog(Facts(bot, int(voice_channel_id), exec_hour))
