@@ -67,28 +67,36 @@ def get_random_fact():
         conn.commit()
         c.execute('SELECT id, fact_text FROM facts')
         available = c.fetchall()
-        print("♻️ Todos os factos foram usados — a lista foi reiniciada.")
+        print("Todos os factos foram usados — a lista foi reiniciada.")
 
     if not available:
         conn.close()
         return jsonify({"error": "Não há factos na base de dados."}), 404
 
     chosen = random.choice(available)
-    fact_id = chosen['id']
-    fact_text = chosen['fact_text']
+    conn.close()
+
+    return jsonify({"id": chosen["id"], "fact_text": chosen["fact_text"]})
+
+@app.route("/fact/mark", methods=["POST"])
+def mark_fact_used():
+    data = request.get_json()
+    fact_id = data.get("id")
+    fact_text = data.get("fact_text")
 
     now = datetime.now()
     use_date = now.strftime("%d/%m/%Y")
     use_time = now.strftime("%H:%M")
 
-    c.execute('''INSERT INTO used_facts (fact_id, fact_text, use_date, use_time)
-                 VALUES (?, ?, ?, ?)''', (fact_id, fact_text, use_date, use_time))
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('INSERT INTO used_facts (fact_id, fact_text, use_date, use_time) VALUES (?, ?, ?, ?)',
+              (fact_id, fact_text, use_date, use_time))
     day = c.lastrowid
     conn.commit()
     conn.close()
 
-    return jsonify({"day": day, "fact": fact_text, "use_date": use_date, "use_time": use_time})
-
+    return jsonify({"day": day, "use_date": use_date, "use_time": use_time}), 201
 
 @app.route("/fact/<day_or_date>", methods=["GET"])
 def get_fact_by_day_or_date(day_or_date):
@@ -109,6 +117,44 @@ def get_fact_by_day_or_date(day_or_date):
         return jsonify(dict(row))
     return jsonify({"error": "Facto não encontrado."}), 404
 
+@app.route("/fact/latest", methods=["GET"])
+def get_latest_fact():
+    conn = get_db_connection()
+    c = conn.cursor()
+
+    c.execute('''
+                SELECT *
+                FROM used_facts
+                ORDER BY day DESC 
+                LIMIT 1
+              ''')
+
+    row = c.fetchone()
+    conn.close()
+
+    if row:
+        return jsonify(dict(row))
+
+    return jsonify({"error": "Nenhum facto encontrado."}), 404
+
+@app.route("/fact/previous", methods=["GET"])
+def get_previous_fact():
+    conn = get_db_connection()
+    c = conn.cursor()
+    c.execute('''
+              SELECT *
+              FROM used_facts
+              ORDER BY day DESC 
+              LIMIT 1 OFFSET 1
+            ''')
+
+    row = c.fetchone()
+    conn.close()
+
+    if row:
+        return jsonify(dict(row))
+
+    return jsonify({"error": "Nenhum facto anterior encontrado."}), 404
 
 @app.route("/fact", methods=["POST"])
 def add_fact():

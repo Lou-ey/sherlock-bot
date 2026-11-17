@@ -1,5 +1,4 @@
 import discord
-from discord.app_commands import describe
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
@@ -18,7 +17,7 @@ red = 0xFF0000
 
 @client.event
 async def on_ready():
-    activity = discord.Activity(type=discord.ActivityType.listening, name='!facts')
+    activity = discord.Activity(type=discord.ActivityType.listening, name='?facts')
     await client.change_presence(activity=activity)
     print(f'{client.user} has connected to the following servers:\n')
     for server in client.guilds:
