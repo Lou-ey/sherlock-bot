@@ -1,0 +1,7 @@
+discord-py
+gtts
+aiohttp
+python-dotenv
+flask
+PyNaCl
+davey

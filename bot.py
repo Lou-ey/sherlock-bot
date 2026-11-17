@@ -1,5 +1,4 @@
 import discord
-from discord.app_commands import describe
 from discord.ext import commands
 from dotenv import load_dotenv
 import os
