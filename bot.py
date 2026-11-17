@@ -6,9 +6,10 @@ import os
 load_dotenv()
 TOKEN = os.getenv("TOKEN")
 
-intents = discord.Intents.all()
+intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
+intents.voice_states = True
 
 client = commands.Bot(command_prefix='?', intents=intents, help_command=None)
 
